@@ -1,0 +1,52 @@
+.tools-title {
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 40px;
+    text-decoration: underline;
+    font-weight: 400;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 30px;
+    row-gap: 40px;
+}
+
+.tool-preview {
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: rgba(0, 0, 0, 0.747);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.tool-image-row {
+    margin-bottom: 0;
+}
+
+.tool-image{
+    height: 300px;
+    width: 100%;
+    object-fit: cover;
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+.tool-title {
+    font-weight: 500;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.tool-info {
+    margin-bottom: 15px;
+}
+
+.tool-title,
+.tool-info {
+    margin-right: 12px;
+    margin-left: 12px;
+}
