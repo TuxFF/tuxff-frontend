@@ -2,11 +2,20 @@
 
 <html>
   <head>
+    <title>Underdog ADP</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      .chart-container {
+        height: 500px;
+      }
+    </style>
   </head>
 
   <body>
-    <canvas id="adp-visualization"></canvas>
+    <div class="chart-container">
+      <canvas id="adp-visualization"></canvas>
+    </div>
 
     <script>
       async function loadCSVData() {
