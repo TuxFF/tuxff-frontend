@@ -18,113 +18,21 @@
     </div>
 
     <script>
-      async function loadCSVData() {
+      async function adp_API() {
         try {
-          const response = await fetch('data/bbm5_adp.csv');
-          const csvText = await response.text();
-          
-          // Parse CSV
-          const lines = csvText.split('\n');
-          const headers = lines[0].split(',');
-          
-          // Find Christian McCaffrey's row (should be first data row)
-          const cmcRow = lines[8].split(','); // Second line (index 1) is first data row
-          
-          // Extract date columns (skip first 3 columns: index, player_id, player_name, position_name)
-          const dateColumns = headers.slice(4);
-          const adpValues = cmcRow.slice(4).map(val => parseFloat(val));
-          
-          // Format dates for display
-          const formattedDates = dateColumns.map(date => {
-            const dateObj = new Date(date);
-            return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          });
-          
-          return {
-            dates: formattedDates,
-            adpValues: adpValues
-          };
+          const response = await fetch('https://ms5dlzolh3.execute-api.us-east-2.amazonaws.com/default/player-get-adp/4de8084d-aa1a-43c7-9676-0def5b39e980');
+          const data = await response.json();
+          console.log('API Reponse:', data);
+          document.body.innerHTML += '<p>API Response: ' + JSON.stringify(data) + '</p>';
         } catch (error) {
-          console.error('Error loading CSV data:', error);
-          return null;
+          console.error('Error:', error);
+          document.body.innerHTML += '<p>Error: ' + error.message + '</p>';
         }
       }
 
-      async function createChart() {
-        const data = await loadCSVData();
-        
-        if (!data) {
-          document.getElementById('adp-visualization').innerHTML = 'Error loading data';
-          return;
-        }
+      adp_API();
 
-        const ctx = document.getElementById('adp-visualization').getContext('2d');
-        const myChart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: data.dates,
-            datasets: [{
-              label: 'Christian McCaffrey ADP',
-              data: data.adpValues,
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: 'rgba(75, 192, 192, 0.2)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: true,
-                text: 'Christian McCaffrey ADP Trend (2024 Season)',
-                font: {
-                  size: 16
-                }
-              },
-              legend: {
-                display: true,
-                position: 'top'
-              }
-            },
-            scales: {
-              y: {
-                title: {
-                  display: true,
-                  text: 'Average Draft Position'
-                },
-                reverse: true, // Lower ADP numbers are better, so reverse the scale
-                beginAtZero: false
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Date'
-                },
-                ticks: {
-                  maxTicksLimit: 10 // Limit number of date labels to avoid crowding
-                }
-              }
-            },
-            elements: {
-              point: {
-                radius: 3,
-                hoverRadius: 5
-              }
-            },
-            interaction: {
-              intersect: false,
-              mode: 'index'
-            }
-          }
-        });
-      }
+    </script>
 
-      // Initialize the chart when the page loads
-      createChart();
-    </script>
-    </script>
   </body>
 </html>
