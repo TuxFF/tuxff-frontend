@@ -7,7 +7,9 @@
 
     <style>
       .chart-container {
-        height: 500px;
+        height: 550px;
+        display: flex;
+        justify-content: center;
       }
     </style>
   </head>
@@ -19,7 +21,7 @@
     <button onclick="searchAndGraphPlayer()">Search Player</button>
 
     <div class="chart-container">
-      <canvas id="adp-visualization"></canvas>
+      <canvas class="chart" id="adp-visualization"></canvas>
     </div>
 
     <script>
@@ -48,6 +50,36 @@
           data: {
             labels: dates,
             datasets: datasets
+          },
+          options: {
+            scales: {
+              x: {
+                ticks: {
+                  maxTicksLimit: 8,  // Your desired number of labels
+                  callback: function(value, index, ticks) {
+                    // Format x-axis labels as MM/DD
+                    const date = new Date(this.getLabelForValue(value));
+                    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+                  }
+                }
+              },
+              y: {
+                ticks: {
+                  maxTicksLimit: 10
+                }
+              }
+            },
+            plugins: {
+              tooltip: {
+                callbacks: {
+                  title: function(context) {
+                    // Format tooltip title as MM/DD/YYYY
+                    const date = new Date(context[0].label);
+                    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                  }
+                }
+              }
+            }
           }
         }
 
@@ -79,7 +111,10 @@
               label: `${data[1]} (${data[2]})`,
               data: adpValues,
               borderColor: `hsl(${i * 120}, 70%, 50%)`,
-              tension: 0.1
+              tension: 0.1,
+              pointRadius: 0,
+              pointHoverRadius: 6,
+              pointHitRadius: 10  
             })
           }
 
