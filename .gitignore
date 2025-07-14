@@ -49,6 +49,10 @@ jspm_packages/
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 
+# Data directories
+data/large data/*
+!data/large data/.gitkeep
+
 # Python cache
 __pycache__/
 *.py[cod]
