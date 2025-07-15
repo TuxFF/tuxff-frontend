@@ -4,6 +4,7 @@
   <head>
     <title>Underdog ADP</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair"></script>
 
     <style>
       .chart-container {
@@ -55,31 +56,96 @@
           options: {
             scales: {
               x: {
+                grid: {
+                  display: false
+                },
                 ticks: {
-                  maxTicksLimit: 8,  // Your desired number of labels
+                  maxTicksLimit: 8,
+                  color: '#333333',
+                  font: {
+                    size: 15
+                  },
                   callback: function(value, index, ticks) {
-                    // Format x-axis labels as MM/DD
                     const date = new Date(this.getLabelForValue(value));
                     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
                   }
                 }
               },
               y: {
+                reverse: true,
+                title: {
+                  display: true,
+                  text: 'Average Draft Pick (ADP)',
+                  font: {
+                    size: 16,
+                    weight: 'bold'
+                  },
+                  color: '#333333'
+                },
                 ticks: {
-                  maxTicksLimit: 10
-                }
-              }
-            },
-            plugins: {
-              tooltip: {
-                callbacks: {
-                  title: function(context) {
-                    // Format tooltip title as MM/DD/YYYY
-                    const date = new Date(context[0].label);
-                    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                  maxTicksLimit: 10,
+                  color: '#333333',
+                  font: {
+                    size: 15
                   }
                 }
               }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeInOutQuart'
+              },
+            interaction: {
+              intersect: false,
+              mode: 'index'
+            },
+            plugins: {
+              crosshair: {
+                line: {
+                  color: '#CCCCCC',
+                  width: 1
+                }
+              },
+              tooltip: {
+                displayColors: false,
+                caretPadding: 10,
+                backgroundColor: 'white',
+                borderColor: '#999999',
+                borderWidth: 1,
+                titleColor: '#333333',
+                bodyColor: '#2222222',
+                padding: 12,
+                caretSize: 8,
+                cornerRadius: 6,
+                bodySpacing: 4,
+                titleSpacing: 4,
+                titleFont: {
+                  size: 14
+                },
+                bodyFont: {
+                  size: 13
+                },
+                callbacks: {
+                  title: function(context) {
+                    const date = new Date(context[0].label);
+                    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                  },
+                  label: function(context) {
+                    return `● ${context.dataset.label}: ${context.parsed.y}`;
+                  }
+                }
+              },
+              legend: {
+                position: 'bottom',
+                labels: {
+                  font: {
+                    size: 14
+                  },
+                  padding: 20,
+                  usePointStyle: true,
+                  pointStyle: 'line'
+                }
+              },
             }
           }
         }
@@ -113,7 +179,8 @@
               label: `${data[1]} (${data[2]})`,
               data: adpValues,
               borderColor: `hsl(${i * 120}, 70%, 50%)`,
-              tension: 0.1,
+              borderWidth: 4,
+              tension: 0.15,
               pointRadius: 0,
               pointHoverRadius: 6,
               pointHitRadius: 10  
