@@ -12,40 +12,254 @@
         display: flex;
         justify-content: center;
       }
+
+      .player-search-container {
+        position: relative;
+        display: inline-block;
+        margin: 5px;
+      }
+
+      .player-search-input {
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 200px;
+      }
+
+      .player-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ccc;
+        border-top: none;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+      }
+
+      .player-dropdown-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+      }
+
+      .player-dropdown-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .player-dropdown-item:last-child {
+        border-bottom: none;
+      }
+
+      .player-position {
+        color: #666;
+        font-size: 12px;
+        margin-left: 5px;
+      }
+
+      .search-controls {
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .search-controls input, .search-controls button {
+        margin: 5px;
+      }
+
+      #year {
+        padding: 8px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 120px;
+        background-color: white;
+        cursor: pointer;
+      }
+
+      #year:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 14px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
     </style>
   </head>
 
   <body>
-    <input type="text" id="year" name="year" placeholder="Enter Year">
-    <input type="text" id="player_id_1" name="player_id_1">
-    <input type="text" id="player_id_2" name="player_id_2">
-    <input type="text" id="player_id_3" name="player_id_3">
-    <button onclick="searchAndGraphPlayer()">Search Player</button>
+    <div class="search-controls">
+      <select id="year" name="year">
+        <option value="">Select Year</option>
+        <option value="2021">2021</option>
+        <option value="2022">2022</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+      </select>
+      
+      <div class="player-search-container">
+        <input type="text" id="player_search_1" class="player-search-input" placeholder="Search Player 1..." autocomplete="off">
+        <div id="player_dropdown_1" class="player-dropdown"></div>
+        <input type="hidden" id="player_id_1" name="player_id_1">
+      </div>
+
+      <div class="player-search-container">
+        <input type="text" id="player_search_2" class="player-search-input" placeholder="Search Player 2..." autocomplete="off">
+        <div id="player_dropdown_2" class="player-dropdown"></div>
+        <input type="hidden" id="player_id_2" name="player_id_2">
+      </div>
+
+      <div class="player-search-container">
+        <input type="text" id="player_search_3" class="player-search-input" placeholder="Search Player 3..." autocomplete="off">
+        <div id="player_dropdown_3" class="player-dropdown"></div>
+        <input type="hidden" id="player_id_3" name="player_id_3">
+      </div>
+
+      <button onclick="searchAndGraphPlayer()">Search Player</button>
+    </div>
 
     <div class="chart-container">
       <canvas class="chart" id="adp-visualization"></canvas>
     </div>
 
     <script>
-      async function fetchPlayerADP(playerId, year) {
+      let playersData = [];
+
+      async function loadPlayerData() {
         try {
-          const response = await fetch(`https://ms5dlzolh3.execute-api.us-east-2.amazonaws.com/default/player-get-adp/${year}/${playerId}`);
+          const response = await fetch('https://12eum45kii.execute-api.us-east-2.amazonaws.com/default/get-player-list');
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const data = await response.json();
-          console.log('API Reponse:', data);
-          document.body.innerHTML += '<p>API Response: ' + JSON.stringify(data) + '</p>';
+
+          playersData = data.map(player => ({
+            id: player.player_id,
+            name: player.player_name,
+            position: player.position
+          }));
+          
+          console.log(`Loaded ${playersData.length} players from API`);
+        } catch (error) {
+          console.error('Error loading player data:', error);
+          playersData = [];
+        }
+      }
+
+      function filterPlayers(searchTerm) {
+        if (!searchTerm || searchTerm.length < 2) return [];
+        
+        const term = searchTerm.toLowerCase();
+        return playersData.filter(player => 
+          player.name.toLowerCase().includes(term)
+        ).slice(0, 10);
+      }
+
+      function showPlayerDropdown(searchInputId, results) {
+        const dropdownId = searchInputId.replace('search', 'dropdown');
+        const dropdown = document.getElementById(dropdownId);
+        
+        dropdown.innerHTML = '';
+        dropdown.style.display = 'none';
+        
+        if (results.length === 0) return;
+        
+        results.forEach(player => {
+          const item = document.createElement('div');
+          item.className = 'player-dropdown-item';
+          item.innerHTML = `${player.name} <span class="player-position">${player.position}</span>`;
+          item.onclick = () => selectPlayer(searchInputId, player);
+          dropdown.appendChild(item);
+        });
+        
+        dropdown.style.display = 'block';
+      }
+
+      function selectPlayer(searchInputId, player) {
+        const searchInput = document.getElementById(searchInputId);
+        const hiddenInputId = searchInputId.replace('search', 'id');
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const dropdownId = searchInputId.replace('search', 'dropdown');
+        const dropdown = document.getElementById(dropdownId);
+        
+        searchInput.value = player.name;
+        hiddenInput.value = player.id;
+        
+        dropdown.style.display = 'none';
+        
+        console.log(`Selected: ${player.name} (${player.id})`);
+      }
+
+      function hideDropdown(searchInputId) {
+        setTimeout(() => {
+          const dropdownId = searchInputId.replace('search', 'dropdown');
+          const dropdown = document.getElementById(dropdownId);
+          dropdown.style.display = 'none';
+        }, 150);
+      }
+
+      function initializePlayerSearch() {
+        for (let i = 1; i <= 3; i++) {
+          const searchInputId = `player_search_${i}`;
+          const searchInput = document.getElementById(searchInputId);
+          
+          searchInput.addEventListener('input', function() {
+            const results = filterPlayers(this.value);
+            showPlayerDropdown(searchInputId, results);
+          });
+          
+          searchInput.addEventListener('blur', function() {
+            hideDropdown(searchInputId);
+          });
+          
+          searchInput.addEventListener('focus', function() {
+            if (this.value) {
+              const results = filterPlayers(this.value);
+              showPlayerDropdown(searchInputId, results);
+            }
+          });
+        }
+      }
+
+      async function fetchPlayerADP(playerId, year) {
+        try {
+          const response = await fetch(`https://ms5dlzolh3.execute-api.us-east-2.amazonaws.com/default/player-get-adp/${year}/${playerId}`);
+          if (!response.ok) {
+            // Player likely doesn't exist for this year - this is expected behavior
+            console.log(`Player ${playerId} not found for year ${year}`);
+            return null;
+          }
+          const data = await response.json();
+          console.log('API Response:', data);
           return data;
         } catch (error) {
-          console.error('Error:', error);
-          document.body.innerHTML += '<p>Error: ' + error.message + '</p>';
+          // Log error but don't modify the DOM
+          console.error(`Error fetching ADP for player ${playerId} in ${year}:`, error);
           return null;
         }
       }
 
       function graphADP(datasets, dates) {
         const ctx = document.getElementById('adp-visualization').getContext('2d');
+
+        if (window.myChart) {
+          window.myChart.destroy();
+        }
 
         const chartConfig = {
           type: 'line',
@@ -150,46 +364,68 @@
           }
         }
 
-        new Chart(ctx, chartConfig);
+        window.myChart = new Chart(ctx, chartConfig);
       }
 
       async function searchAndGraphPlayer() {
         const year = document.getElementById('year').value;
+        
+        if (!year) {
+          alert('Please select a year first');
+          return;
+        }
+        
         const playerId_1 = document.getElementById('player_id_1').value;
         const playerId_2 = document.getElementById('player_id_2').value;
         const playerId_3 = document.getElementById('player_id_3').value;
 
-        const data_1 = await fetchPlayerADP(playerId_1, year);
-        const data_2 = await fetchPlayerADP(playerId_2, year);
-        const data_3 = await fetchPlayerADP(playerId_3, year);
-        
-        const dataArray = [data_1, data_2, data_3].filter(data => data !== null);
+        try {
+          const data_1 = playerId_1 ? await fetchPlayerADP(playerId_1, year) : null;
+          const data_2 = playerId_2 ? await fetchPlayerADP(playerId_2, year) : null;
+          const data_3 = playerId_3 ? await fetchPlayerADP(playerId_3, year) : null;
+          
+          const dataArray = [data_1, data_2, data_3].filter(data => data !== null);
 
-        if (dataArray.length > 0) {
-          const lineData = [];
-          let dates = []
+          if (dataArray.length > 0) {
+            const lineData = [];
+            let dates = []
 
-          for (const i in dataArray) {
-            const data = dataArray[i]; 
-            const adpData = data[3];
-            dates = Object.keys(adpData);
-            const adpValues = Object.values(adpData);
+            for (const i in dataArray) {
+              const data = dataArray[i]; 
+              const adpData = data[3];
+              dates = Object.keys(adpData);
+              const adpValues = Object.values(adpData);
 
-            lineData.push({
-              label: `${data[1]} (${data[2]})`,
-              data: adpValues,
-              borderColor: `hsl(${i * 120}, 70%, 50%)`,
-              borderWidth: 4,
-              tension: 0.15,
-              pointRadius: 0,
-              pointHoverRadius: 6,
-              pointHitRadius: 10  
-            })
+              lineData.push({
+                label: `${data[1]} (${data[2]})`,
+                data: adpValues,
+                borderColor: `hsl(${i * 120}, 70%, 50%)`,
+                borderWidth: 4,
+                tension: 0.15,
+                pointRadius: 0,
+                pointHoverRadius: 6,
+                pointHitRadius: 10  
+              })
+            }
+
+            graphADP(lineData, dates)
+          } else {
+            console.log('No valid player data found for the selected year');
+            // Clear the chart if no data
+            if (window.myChart) {
+              window.myChart.destroy();
+            }
           }
-
-          graphADP(lineData, dates)
+        } catch (error) {
+          console.error('Error in searchAndGraphPlayer:', error);
+          // Don't break the page - just log the error
         }
       }
+
+      document.addEventListener('DOMContentLoaded', async function() {
+        await loadPlayerData();
+        initializePlayerSearch();
+      });
 
     </script>
 
