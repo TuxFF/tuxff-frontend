@@ -50,8 +50,8 @@ jspm_packages/
 .ipynb_checkpoints
 
 # Data directories
-data/large data/*
-!data/large data/.gitkeep
+data/large_data/*
+!data/large_data/.gitkeep
 
 # Python cache
 __pycache__/
